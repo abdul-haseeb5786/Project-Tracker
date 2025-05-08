@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import taskRoutes from './routes/tasks.js';
+import userRoutes from './routes/users.js';
 import './utils/reminders.js';
 import { Server } from 'socket.io';
 import http from 'http';
@@ -15,7 +16,8 @@ const io = new Server(server, { cors: { origin: 'http://localhost:5173' } });
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:5173' }));
+
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
@@ -25,6 +27,7 @@ mongoose.connect(process.env.MONGO_URI)
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/users', userRoutes);
 
 // Socket.io for real-time comments
 io.on('connection', (socket) => {

@@ -9,6 +9,19 @@ const UserSchema = new mongoose.Schema({
   password: { 
     type: String, 
     required: true 
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  role: {
+    type: String,
+    enum: ['owner', 'project_manager', 'employee'],
+    default: 'employee'
+  },
+  assignedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 });
 

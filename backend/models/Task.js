@@ -1,30 +1,72 @@
 import mongoose from 'mongoose';
 
-const TaskSchema = new mongoose.Schema({
-  title: { 
-    type: String, 
-    required: true 
+const taskSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
   },
-  description: String,
-  category: { 
-    type: String, 
-    enum: ['Bug', 'Feature', 'Improvement'] 
+  description: {
+    type: String,
+    required: true,
+    trim: true
   },
-  priority: { 
-    type: String, 
-    enum: ['High', 'Medium', 'Low'], 
-    default: 'Medium' 
+  status: {
+    type: String,
+    enum: ['pending', 'in-progress', 'completed'],
+    default: 'pending'
   },
-  dueDate: Date,
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+    default: 'medium'
+  },
+  dueDate: {
+    type: Date,
+    required: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  accepted: {
+    type: Boolean,
+    default: false
+  },
   comments: [{
-    text: String,
-    author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    createdAt: { type: Date, default: Date.now }
-  }],
-  createdBy: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User' 
-  }
-}, { timestamps: true });
+    text: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
+}, {
+  timestamps: true
+});
 
-export default mongoose.model('Task', TaskSchema);
+// Add validation for due date
+taskSchema.pre('save', function(next) {
+  if (this.dueDate < new Date()) {
+    next(new Error('Due date cannot be in the past'));
+  }
+  next();
+});
+
+const Task = mongoose.model('Task', taskSchema);
+
+export default Task;

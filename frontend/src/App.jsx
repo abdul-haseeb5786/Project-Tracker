@@ -1,67 +1,87 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import TaskForm from './components/TaskForm';
-import TaskList from './components/TaskList';
-import DarkModeToggle from './components/DarkModeToggle';
-import NotificationBell from './components/NotificationBell';
+import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import AuthModal from './components/AuthModal';
+import Navbar from './components/Navbar';
+import EmployeePage from './pages/EmployeePage';
+import EmployeeList from './pages/EmployeeList';
+import TaskPage from './pages/TaskPage';
+import MyTasks from './pages/MyTasks';
+import TaskHistory from './pages/TaskHistory';
 
-function App() {
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem('darkMode') === 'true'
-  );
+const App = () => {
+  const { user, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem('darkMode', darkMode);
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  return (
-    <AuthProvider>
-      <BrowserRouter>
-        <div className={`min-h-screen ${darkMode ? 'dark:bg-gray-900' : ''}`}>
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold dark:text-white">Project Tracker</h1>
-              <div className="flex gap-4 items-center">
-                <NotificationBell />
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg"
-                >
-                  Login
-                </button>
-                <DarkModeToggle
-                  darkMode={darkMode}
-                  setDarkMode={setDarkMode}
-                />
-              </div>
-            </div>
-
-            {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
-
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <>
-                    <TaskForm />
-                    <TaskList />
-                  </>
-                }
-              />
-            </Routes>
+  const AppContent = () => {
+    if (!user) {
+      return (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">Welcome to Project Tracker</h1>
+            <p className="mb-4">Please login to continue</p>
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+            >
+              Login
+            </button>
           </div>
         </div>
-      </BrowserRouter>
-    </AuthProvider>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Navbar />
+        
+        <main className="py-6">
+          <Routes>
+            <Route path="/" element={<Navigate to={
+              user.role === 'employee' ? '/my-tasks' : '/tasks'
+            } replace />} />
+            
+            {/* Owner Routes */}
+            {user.role === 'owner' && (
+              <>
+                <Route path="/employees" element={<EmployeePage />} />
+                <Route path="/employee-list" element={<EmployeeList />} />
+                <Route path="/tasks" element={<TaskPage />} />
+              </>
+            )}
+            
+            {/* Project Manager Routes */}
+            {user.role === 'project_manager' && (
+              <>
+                <Route path="/tasks" element={<TaskPage />} />
+                <Route path="/employee-list" element={<EmployeeList />} />
+              </>
+            )}
+            
+            {/* Employee Routes */}
+            {user.role === 'employee' && (
+              <>
+                <Route path="/my-tasks" element={<MyTasks />} />
+                <Route path="/task-history" element={<TaskHistory />} />
+              </>
+            )}
+            
+            {/* Fallback route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </div>
+    );
+  };
+
+  return (
+    <Router>
+      <AppContent />
+      {showAuthModal && (
+        <AuthModal onClose={() => setShowAuthModal(false)} />
+      )}
+    </Router>
   );
-}
+};
 
 export default App;

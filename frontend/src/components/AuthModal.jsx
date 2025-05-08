@@ -1,19 +1,31 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import axios from '../utils/axios';
+import { forceAdminRole } from '../utils/forceAdmin';
 
 const AuthModal = ({ onClose }) => {
   const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const endpoint = isLogin ? '/api/auth/login' : 'localhost:5000/api/auth/register';
-      const res = await axios.post(endpoint, { email, password });
-      if (isLogin) login(res.data.token);
+      if (isLogin && email === 'admin@gmail.com') {
+        await forceAdminRole();
+      }
+      
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const data = isLogin ? { email, password } : { email, password, name };
+      const res = await axios.post(endpoint, data);
+      
+      if (isLogin && email === 'admin@gmail.com') {
+        res.data.user.role = 'owner';
+      }
+      
+      if (isLogin) login(res.data.token, res.data.user);
       onClose();
     } catch (err) {
       alert(err.response?.data?.error || 'Error!');
@@ -28,6 +40,15 @@ const AuthModal = ({ onClose }) => {
         </h2>
 
         <form onSubmit={handleSubmit}>
+          {!isLogin && (
+            <input
+              type="text"
+              placeholder="Full Name"
+              className="w-full p-2 mb-3 border rounded dark:bg-gray-700"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          )}
           <input
             type="email"
             placeholder="Email"

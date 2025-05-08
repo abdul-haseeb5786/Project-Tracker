@@ -1,14 +1,18 @@
-import { useState, useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import axios from 'axios';
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import axios from '../utils/axios';
 
 const CommentSection = ({ taskId, comments }) => {
   const [newComment, setNewComment] = useState('');
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post(`/api/tasks/${taskId}/comments`, { text: newComment });
+    if (!user) return;
+    await axios.post(`/api/tasks/${taskId}/comments`, { 
+      text: newComment,
+      userId: user._id 
+    });
     setNewComment('');
   };
 
@@ -32,7 +36,7 @@ const CommentSection = ({ taskId, comments }) => {
       {comments.map((comment) => (
         <div key={comment._id} className="p-3 mb-2 bg-gray-100 dark:bg-gray-700 rounded-md">
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            {comment.author.email} - {new Date(comment.createdAt).toLocaleString()}
+            {comment.author?.name || comment.author?.email} - {new Date(comment.createdAt).toLocaleString()}
           </p>
           <p className="mt-1">{comment.text}</p>
         </div>

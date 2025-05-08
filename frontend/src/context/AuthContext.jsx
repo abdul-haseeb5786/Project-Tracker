@@ -1,6 +1,6 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axios';
 
 const AuthContext = createContext();
 
@@ -20,15 +20,11 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (token, userData) => {
     try {
-      const res = await axios.post('/api/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);
-      // User data fetch करें
-      const userRes = await axios.get('/api/auth/me', {
-        headers: { Authorization: `Bearer ${res.data.token}` }
-      });
-      setUser(userRes.data); // User data set करें
+      localStorage.setItem('token', token);
+      setUser(userData);
+      console.log('Logged in user:', userData);
     } catch (err) {
       console.error("Login failed:", err);
     }
