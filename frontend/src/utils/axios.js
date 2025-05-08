@@ -4,7 +4,8 @@ const instance = axios.create({
   baseURL: 'https://project-tracker-lq9w.vercel.app',
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true
 });
 
 // Add a request interceptor to add the auth token
