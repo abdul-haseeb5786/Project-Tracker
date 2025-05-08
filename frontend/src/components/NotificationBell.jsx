@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
+import { BellIcon } from '@heroicons/react/24/outline';
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
@@ -8,7 +10,19 @@ const NotificationBell = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+    const socket = io('https://project-tracker-lq9w.vercel.app', {
+      transports: ['websocket'],
+      secure: true,
+      path: '/socket.io'
+    });
+
+    socket.on('connect', () => {
+      console.log('Socket connected');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
 
     socket.on('newTask', (task) => {
       if (task.assignedTo === user?._id) {
@@ -28,7 +42,9 @@ const NotificationBell = () => {
       }
     });
 
-    return () => socket.disconnect();
+    return () => {
+      socket.disconnect();
+    };
   }, [user]);
 
   const clearNotifications = () => {
@@ -38,37 +54,56 @@ const NotificationBell = () => {
 
   return (
     <div className="relative">
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         className="p-2 relative"
         onClick={() => setShowNotifications(!showNotifications)}
       >
-        🔔
+        <BellIcon className="h-6 w-6 text-indigo-600" />
         {notifications.length > 0 && (
-          <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+          <motion.span 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-2 py-1 text-xs"
+          >
             {notifications.length}
-          </span>
+          </motion.span>
         )}
-      </button>
+      </motion.button>
 
       {showNotifications && notifications.length > 0 && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg p-4 z-50">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg p-4 z-50"
+        >
           <div className="flex justify-between items-center mb-2">
-            <h3 className="font-semibold">Notifications</h3>
-            <button 
+            <h3 className="font-semibold text-indigo-900">Notifications</h3>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={clearNotifications}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-sm text-indigo-500 hover:text-indigo-700"
             >
               Clear all
-            </button>
+            </motion.button>
           </div>
           <div className="space-y-2">
             {notifications.map((notification, index) => (
-              <p key={index} className="text-sm text-gray-600">
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                className="text-sm text-gray-600 p-2 bg-gray-50 rounded"
+              >
                 {notification}
-              </p>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
