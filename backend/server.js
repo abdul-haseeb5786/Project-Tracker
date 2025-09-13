@@ -66,5 +66,5 @@ io.on('connection', (socket) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Server chal raha hai: http://localhost:${PORT}`);
+  console.log(`Server started on port: http://localhost:${PORT}`);
 });
